@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+.env
+api.log
+*.db  # For SQLite (if used locally)
+migrations/versions/*.py  # Exclude Alembic migration scripts (optional)
