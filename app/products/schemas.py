@@ -1,5 +1,5 @@
-from pydantic import BaseModel, HttpUrl, field_validator
-from typing import Optional
+from pydantic import BaseModel, field_validator
+from typing import Optional, List
 
 class ProductCreate(BaseModel):
     name: str
@@ -95,3 +95,9 @@ class ProductResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ProductListResponse(BaseModel):
+    items: List[ProductResponse]
+    total: int
+    page: int
+    page_size: int
