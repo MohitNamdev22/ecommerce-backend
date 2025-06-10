@@ -24,6 +24,12 @@ async def create_product(product: ProductCreate, db: Session = Depends(get_db), 
     Create a new product (admin-only).
     """
     logger.info(f"Create product attempt by admin: {current_user.email}, product: {product.name}")
+    if db.query(Product).filter(Product.name == product.name).first():
+        logger.warning(f"Product creation failed: {product.name} already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"error": True, "message": "Product with this name already exists", "code": 409}
+        )
     
     try:
         db_product = Product(**product.dict())
@@ -95,6 +101,13 @@ async def update_product(id: int, product: ProductUpdate, db: Session = Depends(
         )
     
     try:
+        if product.name and product.name != db_product.name:
+            if db.query(Product).filter(Product.name == product.name).first():
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={"error": True, "message": "Product with this name already exists", "code": 409}
+                )
+            
         update_data = product.dict(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_product, key, value)
