@@ -10,8 +10,12 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.auth.models import User, UserRole
+import uuid
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-# Configure logging
+
 logger = logging.getLogger(__name__)
 
 # Password hashing
@@ -67,3 +71,36 @@ def admin_only(current_user: User = Depends(get_current_user)):
             detail={"error": True, "message": "Admin access required", "code": 403}
         )
     return current_user
+
+def reset_token_generation() -> str:
+    return str(uuid.uuid4())
+
+def send_reset_password_email(to: str, reset_token: str) -> None:
+    mail = MIMEMultipart()
+    mail['From'] = settings.FROM_EMAIL
+    mail['To'] = to
+    mail['Subject'] = "Request for Password Reset"
+
+    mail_body = f"""
+    Hey there,
+    Here is the link to reset your password:
+    {reset_token}
+    """
+
+    mail.attach(MIMEText(mail_body, 'plain'))
+
+    try:
+        server = smtplib.SMTP('smtp-relay.brevo.com', 587)
+        server.starttls()
+        server.login(settings.BREVO_SMTP_LOGIN, settings.BREVO_API_KEY)
+        server.sendmail(settings.FROM_EMAIL, to, mail.as_string())
+        server.quit()
+        logger.info("Passwort reset email has been sent to", to)
+    except Exception as e:
+        logger.error(f"Failed to send reset email to {to}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error":True, "message":"Failed to Send Email", "code":500}
+        )
+
+

@@ -20,9 +20,7 @@ logging.basicConfig(
 
 @router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 async def create_product(product: ProductCreate, db: Session = Depends(get_db), current_user: User = Depends(admin_only)):
-    """
-    Create a new product (admin-only).
-    """
+    
     logger.info(f"Create product attempt by admin: {current_user.email}, product: {product.name}")
     if db.query(Product).filter(Product.name == product.name).first():
         logger.warning(f"Product creation failed: {product.name} already exists")
@@ -53,9 +51,7 @@ async def get_products(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100)
 ):
-    """
-    List products with pagination (admin-only).
-    """
+    
     logger.info(f"Get products list by admin: {current_user.email}, page: {page}, page_size: {page_size}")
     
     try:
@@ -71,9 +67,7 @@ async def get_products(
 
 @router.get("/{id}", response_model=ProductResponse)
 async def get_product(id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_only)):
-    """
-    Get product details by ID (admin-only).
-    """
+    
     logger.info(f"Get product details by admin: {current_user.email}, product_id: {id}")
     
     product = db.query(Product).filter(Product.id == id).first()
@@ -87,9 +81,7 @@ async def get_product(id: int, db: Session = Depends(get_db), current_user: User
 
 @router.put("/{id}", response_model=ProductResponse)
 async def update_product(id: int, product: ProductUpdate, db: Session = Depends(get_db), current_user: User = Depends(admin_only)):
-    """
-    Update a product by ID (admin-only).
-    """
+    
     logger.info(f"Update product attempt by admin: {current_user.email}, product_id: {id}")
     
     db_product = db.query(Product).filter(Product.id == id).first()
@@ -125,9 +117,7 @@ async def update_product(id: int, product: ProductUpdate, db: Session = Depends(
 
 @router.delete("/{id}", response_model=dict)
 async def delete_product(id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_only)):
-    """
-    Delete a product by ID (admin-only).
-    """
+    
     logger.info(f"Delete product attempt by admin: {current_user.email}, product_id: {id}")
     
     db_product = db.query(Product).filter(Product.id == id).first()

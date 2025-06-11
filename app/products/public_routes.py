@@ -27,19 +27,15 @@ async def list_products(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100)
 ):
-    """
-    List products with optional filtering, sorting, and pagination.
-    """
     logger.info(
         f"List products request: category={category}, min_price={min_price}, "
         f"max_price={max_price}, sort_by={sort_by}, page={page}, page_size={page_size}"
     )
 
     try:
-        # Build query
         query = db.query(Product)
         
-        # Apply filters
+        #filters
         if category:
             query = query.filter(Product.category == category)
         if min_price is not None:
@@ -47,7 +43,7 @@ async def list_products(
         if max_price is not None:
             query = query.filter(Product.price <= max_price)
         
-        # Apply sorting
+        #sorting
         if sort_by:
             field, order = (sort_by.split(":") + ["asc"])[:2]
             if field == "price":
@@ -95,9 +91,6 @@ async def search_products(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100)
 ):
-    """
-    Search products by keyword in name or description.
-    """
     logger.info(f"Search products request: keyword={keyword}, page={page}, page_size={page_size}")
 
     try:
@@ -109,10 +102,9 @@ async def search_products(
             )
         )
         
-        # Get total count
         total = query.count()
         
-        # Apply pagination
+        # pagination
         skip = (page - 1) * page_size
         products = query.offset(skip).limit(page_size).all()
 
@@ -144,9 +136,6 @@ async def search_products(
 
 @router.get("/{id}", response_model=ProductResponse)
 async def get_product(id: int, db: Session = Depends(get_db)):
-    """
-    Get product details by ID.
-    """
     logger.info(f"Get product details request: product_id={id}")
 
     try:

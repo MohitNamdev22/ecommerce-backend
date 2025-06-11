@@ -3,7 +3,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)  # Set to INFO to capture all INFO logs and above
+logger.setLevel(logging.INFO) 
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
