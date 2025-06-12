@@ -81,10 +81,13 @@ def send_reset_password_email(to: str, reset_token: str) -> None:
     mail['To'] = to
     mail['Subject'] = "Request for Password Reset"
 
+    reset_link = f"http://127.0.0.1:8000/reset-password?token={reset_token}"
+
+
     mail_body = f"""
     Hey there,
     Here is the link to reset your password:
-    {reset_token}
+    {reset_link}
     """
 
     mail.attach(MIMEText(mail_body, 'plain'))

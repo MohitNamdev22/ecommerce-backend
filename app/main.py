@@ -5,6 +5,7 @@ from app.core.database import Base, engine
 from app.auth.routes import router as auth_router
 from app.products.routes import router as products_router
 from app.products.public_routes import router as public_products_router
+from app.cart.routes import router as cart_router
 from fastapi import status
 import logging
 from app.middleware.logging import LoggingMiddleware
@@ -41,3 +42,4 @@ Base.metadata.create_all(bind=engine)
 app.include_router(auth_router)
 app.include_router(products_router)
 app.include_router(public_products_router)
+app.include_router(cart_router)
