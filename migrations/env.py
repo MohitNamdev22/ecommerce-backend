@@ -9,6 +9,7 @@ from app.core.database import Base, engine
 from app.auth.models import User
 from app.products.models import Product
 from app.cart.models import ShoppingCart, ShoppingCartItem
+from app.orders.models import Order, OrderItem
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

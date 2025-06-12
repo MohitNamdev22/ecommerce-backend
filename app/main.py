@@ -6,6 +6,7 @@ from app.auth.routes import router as auth_router
 from app.products.routes import router as products_router
 from app.products.public_routes import router as public_products_router
 from app.cart.routes import router as cart_router
+from app.orders.routes import router as orders_routers
 from fastapi import status
 import logging
 from app.middleware.logging import LoggingMiddleware
@@ -43,3 +44,4 @@ app.include_router(auth_router)
 app.include_router(products_router)
 app.include_router(public_products_router)
 app.include_router(cart_router)
+app.include_router(orders_routers)

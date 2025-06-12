@@ -16,6 +16,7 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
     reset_tokens = relationship("ResetPassToken", back_populates="user")
     cart = relationship("ShoppingCart", back_populates="user", uselist=False)
+    orders = relationship("Order", back_populates="user")
 
 class ResetPassToken(Base):
     __tablename__ = "reset_password_tokens"
