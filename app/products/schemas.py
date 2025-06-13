@@ -7,6 +7,7 @@ class ProductCreate(BaseModel):
     price: float
     stock: int
     category: str
+    image_url: Optional[str] = None
 
     @field_validator("name")
     @classmethod
@@ -49,6 +50,7 @@ class ProductUpdate(BaseModel):
     price: Optional[float] = None
     stock: Optional[int] = None
     category: Optional[str] = None
+    image_url: Optional[str] = None
 
     @field_validator("name")
     @classmethod
@@ -92,6 +94,8 @@ class ProductResponse(BaseModel):
     price: float
     stock: int
     category: str
+    image_url : Optional[str]
+    added_by: int
 
     class Config:
         from_attributes = True
