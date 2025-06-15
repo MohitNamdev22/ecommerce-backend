@@ -6,7 +6,7 @@ from app.core.config import settings
 import logging
 from typing import Any, Dict
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.auth.models import User, UserRole
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/signin")
+bearer_scheme = HTTPBearer(description="JWT Bearer token")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -53,11 +53,13 @@ def verify_token(token: str, credentials_exception: HTTPException) -> Dict[str, 
         logger.error(f"Token verification failed: {str(e)}")
         raise credentials_exception
     
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_current_user(credentials: str = Depends(bearer_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail={"error": True, "message": "Invalid token", "code": 401}
+        detail={"error": True, "message": "Invalid token", "code": 401},
+        headers={"WWW-Authenticate": "Bearer"},
     )
+    token = credentials.credentials
     payload = verify_token(token, credentials_exception)
     user = db.query(User).filter(User.email == payload["sub"]).first()
     if not user:
@@ -81,13 +83,11 @@ def send_reset_password_email(to: str, reset_token: str) -> None:
     mail['To'] = to
     mail['Subject'] = "Request for Password Reset"
 
-    reset_link = f"http://127.0.0.1:8000/reset-password?token={reset_token}"
-
 
     mail_body = f"""
     Hey there,
-    Here is the link to reset your password:
-    {reset_link}
+    Here is the Token to reset your password:
+    {reset_token}
     """
 
     mail.attach(MIMEText(mail_body, 'plain'))

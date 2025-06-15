@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.auth.models import ResetPassToken, User, UserRole
 from app.auth.schemas import UserCreate, UserResponse, Token, SignInRequest, ForgotPassword, ResetPassword
-from app.auth.utils import hash_password, reset_token_generation, send_reset_password_email, verify_password, create_access_token, create_refresh_token
+from app.auth.utils import hash_password, reset_token_generation, send_reset_password_email, verify_password, create_access_token, create_refresh_token, bearer_scheme
 import logging
 from typing import cast
 
@@ -54,7 +55,13 @@ async def signup(user: UserCreate, db: Session = Depends(get_db)):
             detail={"error": True, "message": "Internal server error", "code": 500}
         )
 
-@router.post("/signin", response_model=Token)
+@router.post("/signin", response_model=Token, 
+    responses={
+        401: {"description": "Invalid credentials"},
+        500: {"description": "Internal server error"}
+    },
+    summary="Sign in to get access token"
+)
 async def signin(request: SignInRequest, db: Session = Depends(get_db)):
     logger.info(f"Signin attempt for email: {request.email}")
 

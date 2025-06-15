@@ -7,6 +7,7 @@ from app.products.routes import router as products_router
 from app.products.public_routes import router as public_products_router
 from app.cart.routes import router as cart_router
 from app.orders.routes import router as orders_routers
+from fastapi.openapi.utils import get_openapi
 from fastapi import status
 import logging
 from app.middleware.logging import LoggingMiddleware
