@@ -139,42 +139,66 @@ async def forgot_password(request: ForgotPassword, db: Session = Depends(get_db)
 #endpoint for reset password
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(request: ResetPassword, db: Session = Depends(get_db)):
-    logger.info("Password Reset Request")
-    reset_token = db.query(ResetPassToken).filter(ResetPassToken.reset_token == request.reset_token).first()
-
-    if not reset_token:
-        logger.warning(f"Invalid or expired token: {request.reset_token[:8]}...")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": True, "message": "Invalid or expired token", "code": 400}
-        )
-    if reset_token.is_used:
-        logger.warning(f"Token already used: {request.reset_token[:8]}...")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": True, "message": "Token has already been used", "code": 400}
-        )
-    if reset_token.expiry_period < datetime.utcnow():
-        logger.warning(f"Token expired: {request.reset_token[:8]}...")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": True, "message": "Token has expired", "code": 400}
-        )
+    logger.info("Password Reset Attempt")
     try:
+        reset_token = db.query(ResetPassToken).filter(ResetPassToken.reset_token == request.reset_token).first()
+
+        if not reset_token:
+            logger.warning("Invalid or expired token used")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": True, "message": "Invalid or expired token", "code": 400}
+            )
+        if reset_token.is_used:
+            logger.warning(f"Token already used: {request.reset_token[:8]}...")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": True, "message": "Token has already been used", "code": 400}
+            )
+        if reset_token.expiry_period < datetime.utcnow():
+            logger.warning(f"Token expired: {request.reset_token[:8]}...")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": True, "message": "Token has expired", "code": 400}
+            )
+
         user = db.query(User).filter(User.id == reset_token.user_id).first()
+        
         if not user:
             logger.error(f"User not found for token: {request.reset_token[:8]}...")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail={"error": True, "message": "User not found", "code": 404}
             )
-        # Update password
+
+        try:
+            is_same_password = verify_password(request.new_password, str(user.hashed_password))
+            if is_same_password:
+                logger.warning(f"New password matches current password for user ID {user.id}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": True,
+                        "message": "New password cannot be the same as the current password",
+                        "code": 400
+                    }
+                )
+        except ValueError as ve:
+            logger.error(f"Password validation error: {str(ve)}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": True, "message": str(ve), "code": 400}
+            )
+
         user.hashed_password = hash_password(request.new_password)
         reset_token.is_used = True
         db.commit()
 
         logger.info(f"Password reset successful for user ID: {user.id}")
         return {"error": False, "message": "Password updated successfully", "code": 200}
+
+    except HTTPException as he:
+        raise he
     except Exception as e:
         db.rollback()
         logger.error(f"Reset password error: {str(e)}")
